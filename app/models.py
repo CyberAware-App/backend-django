@@ -1,0 +1,104 @@
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+User = get_user_model()
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    is_verified = models.BooleanField(default=False)
+    first_login = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+  
+    
+class OTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    is_used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(default=timezone.now() + timedelta(minutes=10))
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.code}"
+    
+
+
+class Module(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    content = models.JSONField()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return self.name
+    
+    
+class UserModuleProgress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="module_progress")
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    progress = models.IntegerField(default=0)
+    completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.module.name}"
+    
+
+class ModuleQuiz(models.Model):
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    question = models.TextField()
+    options = models.JSONField()
+    correct_answer = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.module.name} - {self.question}"
+    
+    
+class FinalQuiz(models.Model):
+    question = models.CharField(max_length=255)
+    options = models.JSONField()
+    correct_answer = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.question}"
+    
+
+class QuizSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="quiz_sessions")
+    attempt_number = models.PositiveIntegerField()
+    score = models.IntegerField(default=0)
+    passed = models.BooleanField(default=False)
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('user', 'attempt_number')
+    
+    def __str__(self):
+        return f"{self.user.email} - Attempt {self.attempt_number}"
+    
+
+class UserQuizAnswer(models.Model):
+    session = models.ForeignKey(QuizSession, on_delete=models.CASCADE, related_name="answers")
+    question = models.ForeignKey(FinalQuiz, on_delete=models.CASCADE)
+    selected_option = models.CharField(max_length=255)
+    is_correct = models.BooleanField()
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    def save(self, *args, **kwargs):
+        self.is_correct = (self.selected_option == self.question.correct_answer)
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.session.user.email} - {self.question.question}"
