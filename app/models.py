@@ -1,12 +1,13 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="user_profile")
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     is_verified = models.BooleanField(default=False)
@@ -25,6 +26,9 @@ class OTP(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - {self.code}"
+
+    def is_valid(self):
+        return not self.is_used and self.expires_at > timezone.now()
     
 
 
@@ -102,3 +106,14 @@ class UserQuizAnswer(models.Model):
     
     def __str__(self):
         return f"{self.session.user.email} - {self.question.question}"
+    
+    
+class Feedback(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    feedback = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.feedback}"
+    
+    
