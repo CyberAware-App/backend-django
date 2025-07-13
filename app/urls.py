@@ -12,6 +12,11 @@ urlpatterns = [
     path('forgot-password', ForgotPasswordView.as_view(), name='forgot-password'),
     path('reset-password', ResetPasswordView.as_view(), name='reset-password'),
     path('change-password', ChangePasswordView.as_view(), name='change-password'),
+    path('dashboard', DashboardView.as_view(), name='dashboard'),
+    path('module-progress', UserModuleProgressView.as_view(), name='module-progress'),
+    path('module/<int:module_id>', GetModuleView.as_view(), name='get-module'),
+    path('module/<int:module_id>/complete', MarkModuleAsCompletedView.as_view(), name='mark-module-as-completed'),
+    path('module/<int:module_id>/quiz', GetModuleQuizView.as_view(), name='get-module-quiz'),
     path('schema', SpectacularAPIView.as_view(), name='schema'),
     path('swagger', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

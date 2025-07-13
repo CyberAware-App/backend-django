@@ -58,7 +58,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['refresh'] = str(refresh)
         data['access'] = str(refresh.access_token)
         data['email'] = self.user.email
-        data['first_login'] = self.user.user_profile.first_login
         return data
 
 
@@ -96,4 +95,36 @@ class ResetPasswordSerializer(serializers.Serializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(max_length=128)
     new_password = serializers.CharField(max_length=128)
+    
+    
+class ModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
+        fields = ['id', 'name', 'description', 'content']
+
+
+class UserModuleProgressSerializer(serializers.ModelSerializer):
+    module = ModuleSerializer()
+    class Meta:
+        model = UserModuleProgress
+        fields = ['module', 'completed']
+
+
+class ModuleQuizSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModuleQuiz
+        fields = ['id', 'module', 'question', 'options', 'correct_answer']
+
+
+class DashboardSerializer(serializers.Serializer):
+    modules = ModuleSerializer(many=True)
+    completed_modules = serializers.IntegerField()
+    total_modules = serializers.IntegerField()
+    
+    
+class MarkModuleAsCompletedSerializer(serializers.Serializer):
+    module = ModuleSerializer()
+    completed = serializers.BooleanField()
+    
+    
     

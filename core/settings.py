@@ -155,6 +155,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'CyberAware API Documentation',
+    'DESCRIPTION': 'API documentation for CyberAware',
+    'VERSION': '0.1.0'
 }
 
 # JWT settings
@@ -181,3 +189,5 @@ SIMPLE_JWT = {
 
     'JTI_CLAIM': 'jti',
 }
+
+

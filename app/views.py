@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import generics, status, permissions, serializers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,7 +9,7 @@ from utils.response import ResponseMixin
 from django.contrib.auth import get_user_model
 from utils.email import send_otp, send_reset_password_otp, validate_otp
 from rest_framework.views import APIView
-
+from django.http import Http404
 
 User = get_user_model()
 
@@ -81,6 +81,12 @@ class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
                     status_code=status.HTTP_401_UNAUTHORIZED
                 )
             data = serializer.validated_data
+            user = serializer.user
+            first_login = user.user_profile.first_login
+            if first_login:
+                user.user_profile.first_login = False
+                user.user_profile.save()
+            data['first_login'] = first_login
             return self.success_response(
                 data,
                 message="Login successful",
@@ -400,3 +406,197 @@ class ChangePasswordView(APIView, ResponseMixin):
             message="Password changed successfully.",
             status_code=status.HTTP_200_OK
         )
+        
+@extend_schema_view(
+    get=extend_schema(
+        summary="Dashboard",
+        description="Get dashboard data",
+        responses={200: DashboardSerializer}
+    )
+)
+class DashboardView(APIView, ResponseMixin):
+    """
+    Dashboard View
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Dashboard View
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object
+        """
+        user = request.user
+        modules = Module.objects.all().order_by('id')
+        try:
+            user_progress = UserModuleProgress.objects.filter(user=user)
+            completed_modules = user_progress.filter(completed=True).count()
+        except UserModuleProgress.DoesNotExist:
+            completed_modules = 0
+        total_modules = modules.count()
+        return self.success_response(
+            {
+                "modules": ModuleSerializer(modules, many=True).data,
+                "completed_modules": completed_modules,
+                "total_modules": total_modules
+            },
+            message="Dashboard data fetched successfully.",
+            status_code=status.HTTP_200_OK
+        )
+        
+
+@extend_schema_view(
+    get=extend_schema(
+        summary="Get Module",
+        description="Get a module",
+        responses={200: ModuleSerializer}
+    )
+)
+class GetModuleView(APIView, ResponseMixin):
+    """
+    Get Module View
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Get Module View
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object
+        """
+        module_id = kwargs.get('module_id')
+        try:
+            module = get_object_or_404(Module, id=module_id)
+        except Http404:
+            return self.error_response(
+                None,
+                message="Module not found.",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        return self.success_response(
+            {"module": ModuleSerializer(module).data},
+            message="Module fetched successfully.",
+            status_code=status.HTTP_200_OK
+        )
+        
+
+@extend_schema_view(
+    post=extend_schema(
+        summary="Mark Module As Completed",
+        description="Mark a module as completed",
+        responses={200: MarkModuleAsCompletedSerializer}
+    )
+)
+class MarkModuleAsCompletedView(APIView, ResponseMixin):
+    """
+    Mark Module As Completed View
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Mark Module As Completed View
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object
+        """
+        module_id = kwargs.get('module_id')
+        try:
+            module = get_object_or_404(Module, id=module_id)
+        except Http404:
+            return self.error_response(
+                None,
+                message="Module not found.",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        user = request.user
+        user_progress, created = UserModuleProgress.objects.get_or_create(user=user, module=module)
+        user_progress.completed = True
+        user_progress.save()
+        return self.success_response(
+            {"module": ModuleSerializer(module).data, "completed": True},
+            message="Module marked as completed.",
+            status_code=status.HTTP_200_OK
+        )
+        
+@extend_schema_view(
+    get=extend_schema(
+        summary="User Module Progress",
+        description="Get user module progress",
+        responses={200: UserModuleProgressSerializer}
+    )
+)
+class UserModuleProgressView(APIView, ResponseMixin):
+    """
+    User Module Progress View
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        User Module Progress View
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object
+        """
+        user = request.user
+        try:
+            user_progress = UserModuleProgress.objects.filter(user=user).select_related('module')
+            serializer = UserModuleProgressSerializer(user_progress, many=True)
+        except UserModuleProgress.DoesNotExist:
+            return self.error_response(
+                None,
+                message="User module progress not found.",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        return self.success_response(
+            serializer.data,
+            message="User module progress fetched successfully.",
+            status_code=status.HTTP_200_OK
+        )
+        
+        
+@extend_schema_view(
+    get=extend_schema(
+        summary="Get Module Quiz",
+        description="Get a module quiz",
+        responses={200: ModuleQuizSerializer}
+    )
+)
+class GetModuleQuizView(APIView, ResponseMixin):
+    """
+    Get Module Quiz View
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Get Module Quiz View
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object
+        """
+        module_id = kwargs.get('module_id')
+        try:
+            module = get_object_or_404(Module, id=module_id)
+        except Http404:
+            return self.error_response(
+                None,
+                message="Module not found.",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        module_quiz = ModuleQuiz.objects.filter(module=module).order_by('id')
+        serializer = ModuleQuizSerializer(module_quiz, many=True)
+        return self.success_response(
+            serializer.data,
+            message="Module quiz fetched successfully.",
+            status_code=status.HTTP_200_OK
+        )
+        
