@@ -24,7 +24,7 @@ class ModuleAdmin(admin.ModelAdmin):
     
 @admin.register(UserModuleProgress)
 class UserModuleProgressAdmin(admin.ModelAdmin):
-    list_display = ['user__email', 'module__name', 'progress', 'completed']
+    list_display = ['user__email', 'module__name', 'completed']
     list_filter = ['user__email', 'module__name', 'completed']
     search_fields = ['user__email', 'module__name']
     
