@@ -127,4 +127,54 @@ class MarkModuleAsCompletedSerializer(serializers.Serializer):
     completed = serializers.BooleanField()
     
     
+class FinalQuizSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FinalQuiz
+        fields = ['question', 'options']
+
+
+class FinalQuizSubmissionSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    selected_option = serializers.CharField()
+
+
+class FinalQuizResultSerializer(serializers.Serializer):
+    score = serializers.CharField()
+    passed = serializers.BooleanField()
+    correct_answers = serializers.IntegerField()
+    total_questions = serializers.IntegerField()
+    attempt_number = serializers.IntegerField()
+
+
+class CertificateSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    user_email = serializers.SerializerMethodField()
+    certificate_url = serializers.SerializerMethodField()
     
+    class Meta:
+        model = Certificate
+        fields = [
+            'certificate_id', 'user_name', 'user_email', 'issued_date', 
+            'score', 'is_valid', 'certificate_url'
+        ]
+        read_only_fields = ['certificate_id', 'issued_date', 'is_valid']
+    
+    def get_user_name(self, obj):
+        return f"{obj.user.user_profile.first_name} {obj.user.user_profile.last_name}"
+    
+    def get_user_email(self, obj):
+        return obj.user.email
+    
+    def get_certificate_url(self, obj):
+        # Generate certificate download URL
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(
+                f'/api/certificates/{obj.certificate_id}/download/'
+            )
+        return None
+
+
+class GenerateCertificateSerializer(serializers.Serializer):
+    """Serializer for generating a new certificate"""
+    pass  # No input fields needed, uses authenticated user

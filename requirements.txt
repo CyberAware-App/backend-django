@@ -1,5 +1,6 @@
 asgiref==3.9.1
 attrs==25.3.0
+charset-normalizer==3.4.2
 colorama==0.4.6
 django==5.2.4
 django-cors-headers==4.7.0
@@ -16,6 +17,7 @@ jsonschema==4.24.0
 jsonschema-specifications==2025.4.1
 markupsafe==3.0.2
 packaging==25.0
+pillow==11.3.0
 pluggy==1.6.0
 psycopg2==2.9.10
 psycopg2-binary==2.9.10
@@ -27,6 +29,7 @@ python-dotenv==1.1.1
 python-http-client==3.3.7
 pyyaml==6.0.2
 referencing==0.36.2
+reportlab==4.4.2
 rpds-py==0.26.0
 sendgrid==6.12.4
 six==1.17.0

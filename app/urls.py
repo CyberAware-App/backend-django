@@ -17,6 +17,9 @@ urlpatterns = [
     path('module/<int:module_id>', GetModuleView.as_view(), name='get-module'),
     path('module/<int:module_id>/complete', MarkModuleAsCompletedView.as_view(), name='mark-module-as-completed'),
     path('module/<int:module_id>/quiz', GetModuleQuizView.as_view(), name='get-module-quiz'),
+    path('quiz', FinalQuizView.as_view(), name='final-quiz'),
+    path('certificate', CertificateView.as_view(), name='certificate'),
+    path('certificate/<str:certificate_id>/download', CertificateDownloadView.as_view(), name='certificate-download'),
     path('schema', SpectacularAPIView.as_view(), name='schema'),
     path('swagger', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
