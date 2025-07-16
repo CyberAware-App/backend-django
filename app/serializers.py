@@ -19,13 +19,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'password': {'write_only': True}
         }
 
-    def validate(self, value):
+    def validate(self, attrs):
         """
         Validate the user profile data
         """
-        if User.objects.filter(email=value['email']).exists():
-            raise serializers.ValidationError("User with this email already exists")
-        return value
+        if User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError({
+                'email': "User with this email already exists"
+            })
+        return attrs
 
     def create(self, validated_data):
         """
@@ -54,7 +56,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         refresh = self.get_token(self.user)
         if not self.user.user_profile.is_verified:
-            raise serializers.ValidationError("User is not verified.")
+            raise serializers.ValidationError({
+                'email': "User is not verified."
+            })
         data['refresh'] = str(refresh)
         data['access'] = str(refresh.access_token)
         data['email'] = self.user.email
@@ -76,6 +80,16 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 class VerifyOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField(max_length=6)
+
+
+class VerifyOTPResponseSerializer(serializers.Serializer):
+    """Serializer for OTP verification response with authentication tokens"""
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    verified = serializers.BooleanField()
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+    first_login = serializers.BooleanField()
     
     
 class ResendOTPSerializer(serializers.Serializer):

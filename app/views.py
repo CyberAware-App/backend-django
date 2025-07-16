@@ -40,9 +40,8 @@ class UserRegistrationView(generics.GenericAPIView, ResponseMixin):
         """
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            error_message = serializer.errors
             return self.error_response(
-                error_message,
+                self.format_serializer_errors(serializer.errors),
                 message="Registration failed",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -79,7 +78,7 @@ class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
                 return self.error_response(
-                    serializer.errors,
+                    self.format_serializer_errors(serializer.errors),
                     message="Login failed",
                     status_code=status.HTTP_401_UNAUTHORIZED
                 )
@@ -97,13 +96,13 @@ class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
             )
         except serializers.ValidationError as e:
             return self.error_response(
-                None,
+                self.format_serializer_errors(serializer.errors),
                 message=str(e),
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
             return self.error_response(
-                None,
+                str(e),
                 message="Login failed",
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
@@ -126,7 +125,7 @@ class CustomTokenRefreshView(TokenRefreshView, ResponseMixin):
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
                 return self.error_response(
-                    serializer.errors,
+                    self.format_serializer_errors(serializer.errors),
                     message="Token refresh failed",
                     status_code=status.HTTP_401_UNAUTHORIZED
                 )
@@ -153,9 +152,9 @@ class CustomTokenRefreshView(TokenRefreshView, ResponseMixin):
 @extend_schema_view(
     post=extend_schema(
         summary="Verify OTP",
-        description="Verify a user's OTP",
+        description="Verify a user's OTP and automatically log them in",
         request=VerifyOTPSerializer,
-        responses={200: VerifyOTPSerializer},
+        responses={200: VerifyOTPResponseSerializer},
         tags = ['OTP']
     )
 )
@@ -177,7 +176,7 @@ class VerifyOTPView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -195,9 +194,28 @@ class VerifyOTPView(APIView, ResponseMixin):
         user_profile = UserProfile.objects.get(user=user)
         user_profile.is_verified = True
         user_profile.save()
+        
+        # Auto-login after successful verification
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        
+        # Check if this is the user's first login
+        first_login = user_profile.first_login
+        if first_login:
+            user_profile.first_login = False
+            user_profile.save()
+        
         return self.success_response(
-            {"email": email, "first_name": user_profile.first_name, "verified": True},
-            message="OTP verified successfully.",
+            {
+                "email": email, 
+                "first_name": user_profile.first_name, 
+                "verified": True,
+                "access": access_token,
+                "refresh": refresh_token,
+                "first_login": first_login
+            },
+            message="OTP verified successfully. You are now logged in!",
             status_code=status.HTTP_200_OK
         )
         
@@ -229,7 +247,7 @@ class ResendOTPView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -283,7 +301,7 @@ class ForgotPasswordView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -343,7 +361,7 @@ class ResetPasswordView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -395,7 +413,7 @@ class ChangePasswordView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -446,11 +464,13 @@ class DashboardView(APIView, ResponseMixin):
         except UserModuleProgress.DoesNotExist:
             completed_modules = 0
         total_modules = modules.count()
+        percentage_completed = (completed_modules / total_modules) * 100 if total_modules > 0 else 0
         return self.success_response(
             {
                 "modules": ModuleSerializer(modules, many=True).data,
                 "completed_modules": completed_modules,
-                "total_modules": total_modules
+                "total_modules": total_modules,
+                "percentage_completed": percentage_completed
             },
             message="Dashboard data fetched successfully.",
             status_code=status.HTTP_200_OK
@@ -695,21 +715,27 @@ class FinalQuizView(APIView, ResponseMixin):
             user_answers_to_create = []
             
             for data in answers_data:
-                question = data.get('question')
+                question_text = data.get('question')
                 selected_option = data.get('selected_option')
-                if question in correct_answers_dict:
-                    is_correct = correct_answers_dict[question] == selected_option
+                
+                # Find the FinalQuiz object by question text
+                try:
+                    final_quiz_obj = FinalQuiz.objects.get(question=question_text)
+                    is_correct = final_quiz_obj.correct_answer == selected_option
                     if is_correct:
                         correct_count += 1
                         
                     user_answers_to_create.append(
                         UserQuizAnswer(
                             session=quiz_session,
-                            question=question,
+                            question=final_quiz_obj,
                             selected_option=selected_option,
                             is_correct=is_correct
                         )
                     )
+                except FinalQuiz.DoesNotExist:
+                    # Skip questions that don't exist in the database
+                    continue
             
             if user_answers_to_create:
                 UserQuizAnswer.objects.bulk_create(user_answers_to_create)

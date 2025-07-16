@@ -1,0 +1,51 @@
+meta {
+  name: Get Module
+  type: http
+  seq: 10
+}
+
+docs {
+  ## Get Module
+
+  ### Endpoint
+  `GET /module/{module_id}`
+
+  ### Description
+  Retrieve information about a specific module.
+
+  ### Request
+  - **Method:** GET
+  - **Auth:** Bearer token required (`accessToken`)
+  - **URL Parameter:** `module_id` (integer, required)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Module fetched successfully.",
+    "data": {
+      "module": {
+        "id": 1,
+        "name": "Module 1",
+        "description": "...",
+        "content": { }
+      }
+    }
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Module not found.",
+    "errors": null
+  }
+  ```
+}
+
+get {
+  url: {{baseUrl}}/module/1
+  body: none
+  auth: inherit
+}

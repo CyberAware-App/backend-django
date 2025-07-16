@@ -1,0 +1,77 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/login
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  email: 07065175723ferdinand777@gmail.com
+  password: {{password}}
+}
+
+vars:pre-request {
+  password: zayne_is_gay
+}
+
+script:post-response {
+  const responseJson = res.body;
+  
+  if (responseJson.data.access && responseJson.data.refresh) {
+    
+      bru.setVar("accessToken", responseJson.data.access);
+      bru.setVar("refreshToken", responseJson.data.refresh);
+      console.log("Access token saved: " + responseJson.data.access);
+      console.log("Refresh token saved: " + responseJson.data.refresh);
+    
+  } else {
+      console.log("Tokens not found in response.");
+  }
+}
+
+docs {
+  ## Login
+  
+  ### Endpoint
+  `POST /login`
+  
+  ### Description
+  Authenticates a user and returns access and refresh tokens if credentials are valid.
+  
+  ### Request
+  - **Method:** POST
+  - **Auth:** None
+  - **Body (multipart-form):**
+    - `email`: string (required)
+    - `password`: string (required)
+  
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Login successful",
+    "data": {
+      "refresh": "jwt-refresh-token",
+      "access": "jwt-access-token",
+      "email": "user@example.com",
+      "first_login": false
+    }
+  }
+  ```
+  
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Login failed",
+    "errors": {
+      "non_field_errors": "Unable to log in with provided credentials."
+    }
+  }
+  ```
+}

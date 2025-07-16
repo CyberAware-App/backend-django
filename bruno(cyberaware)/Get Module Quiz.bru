@@ -1,0 +1,52 @@
+meta {
+  name: Get Module Quiz
+  type: http
+  seq: 12
+}
+
+docs {
+  ## Get Module Quiz
+
+  ### Endpoint
+  `GET /module/{module_id}/quiz`
+
+  ### Description
+  Retrieve the quiz questions for a specific module.
+
+  ### Request
+  - **Method:** GET
+  - **Auth:** Bearer token required (`accessToken`)
+  - **URL Parameter:** `module_id` (integer, required)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Module quiz fetched successfully.",
+    "data": [
+      {
+        "id": 1,
+        "module": 1,
+        "question": "...",
+        "options": ["A", "B", "C", "D"],
+        "correct_answer": "A"
+      }
+    ]
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Module not found.",
+    "errors": null
+  }
+  ```
+}
+
+get {
+  url: {{baseUrl}}/module/1/quiz
+  body: none
+  auth: inherit
+}

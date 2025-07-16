@@ -1,0 +1,66 @@
+meta {
+  name: User Registration
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/register
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  email: 07065175723ferdinand777@gmail.com
+  password: {{password}}
+  first_name: Ferdinand
+  last_name: Chukwu
+}
+
+vars:pre-request {
+  password: zayne_is_sick
+}
+
+docs {
+  ## Registration
+  
+  ### Endpoint
+  `POST /register`
+  
+  ### Description
+  Allows a new user to register an account.
+  
+  ### Request
+  - **Method:** POST
+  - **Auth:** None
+  - **Body (multipart-form):**
+    - `email`: string (required)
+    - `password`: string (required)
+    - `first_name`: string (required)
+    - `last_name`: string (required)
+  
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "User registered successfully. OTP sent to email.",
+    "data": {
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "otp_sent": true
+    }
+  }
+  ```
+  
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Registration failed",
+    "errors": {
+      "email": "User with this email already exists"
+    }
+  }
+  ```
+}

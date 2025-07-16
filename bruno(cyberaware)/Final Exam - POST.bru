@@ -1,0 +1,60 @@
+meta {
+  name: Final Exam - POST
+  type: http
+  seq: 14
+}
+
+docs {
+  ## Final Exam - Submit Answers
+
+  ### Endpoint
+  `POST /quiz`
+
+  ### Description
+  Submit answers for the final exam quiz.
+
+  ### Request
+  - **Method:** POST
+  - **Auth:** Bearer token required (`accessToken`)
+  - **Body (JSON):**
+   ```json
+   [
+      {
+        "question": "...",
+        "selected_option: "A"
+      }
+   ]
+   ```
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Quiz submitted successfully.",
+    "data": {
+      "score": "8",
+      "passed": true,
+      "correct_answers": 8,
+      "total_questions": 10,
+      "attempt_number": 1
+    }
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Invalid data",
+    "errors": {
+      "question": "This field is required."
+    }
+  }
+  ```
+}
+
+post {
+  url: {{baseUrl}}/quiz
+  body: none
+  auth: inherit
+}

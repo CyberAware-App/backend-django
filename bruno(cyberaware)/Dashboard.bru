@@ -1,0 +1,54 @@
+meta {
+  name: Dashboard
+  type: http
+  seq: 9
+}
+get {
+  url: {{baseUrl}}/dashboard
+  body: none
+  auth: inherit
+}
+
+docs {
+  ## Dashboard
+
+  ### Endpoint
+  `GET /dashboard`
+
+  ### Description
+  Retrieve dashboard data for the authenticated user, such as progress, stats, and notifications.
+
+  ### Request
+  - **Method:** GET
+  - **Auth:** Bearer token required (`accessToken`)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Dashboard data fetched successfully.",
+    "data": {
+      "modules": [
+        {
+          "id": 1,
+          "name": "Module 1",
+          "description": "...",
+          "content": { }
+        }
+      ],
+      "completed_modules": 2,
+      "total_modules": 5,
+      "percentage_completed": 40.0
+    }
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Authentication credentials were not provided.",
+    "errors": null
+  }
+  ```
+}

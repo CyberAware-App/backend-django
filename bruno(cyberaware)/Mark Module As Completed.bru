@@ -1,0 +1,52 @@
+meta {
+  name: Mark Module As Completed
+  type: http
+  seq: 11
+}
+
+docs {
+  ## Mark Module As Completed
+
+  ### Endpoint
+  `POST /module/{module_id}/complete`
+
+  ### Description
+  Mark a specific module as completed for the authenticated user.
+
+  ### Request
+  - **Method:** POST
+  - **Auth:** Bearer token required (`accessToken`)
+  - **URL Parameter:** `module_id` (integer, required)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Module marked as completed.",
+    "data": {
+      "module": {
+        "id": 1,
+        "name": "Module 1",
+        "description": "...",
+        "content": { }
+      },
+      "completed": true
+    }
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Module not found.",
+    "errors": null
+  }
+  ```
+}
+
+post {
+  url: {{baseUrl}}/module/1/complete
+  body: none
+  auth: inherit
+}

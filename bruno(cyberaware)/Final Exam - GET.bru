@@ -1,0 +1,48 @@
+meta {
+  name: Final Exam - GET
+  type: http
+  seq: 13
+}
+
+docs {
+  ## Final Exam - Get Questions
+
+  ### Endpoint
+  `GET /quiz`
+
+  ### Description
+  Retrieve the list of questions for the final exam quiz.
+
+  ### Request
+  - **Method:** GET
+  - **Auth:** Bearer token required (`accessToken`)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Final quiz questions fetched successfully.",
+    "data": [
+      {
+        "question": "...",
+        "options": ["A", "B", "C", "D"]
+      }
+    ]
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Authentication credentials were not provided.",
+    "errors": null
+  }
+  ```
+}
+
+get {
+  url: {{baseUrl}}/quiz
+  body: none
+  auth: inherit
+}
