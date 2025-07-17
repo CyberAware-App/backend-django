@@ -1,0 +1,51 @@
+meta {
+  name: Get Certificate
+  type: http
+  seq: 15
+}
+
+docs {
+  ## Get Certificate
+
+  ### Endpoint
+  `GET /certificate`
+
+  ### Description
+  Retrieve the authenticated user's certificate information.
+
+  ### Request
+  - **Method:** GET
+  - **Auth:** Bearer token required (`accessToken`)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Certificate fetched successfully.",
+    "data": {
+      "certificate_id": "abc123",
+      "user_name": "John Doe",
+      "user_email": "user@example.com",
+      "issued_date": "2024-07-01T12:00:00Z",
+      "score": 85,
+      "is_valid": true,
+      "certificate_url": "https://.../certificate/abc123/download/"
+    }
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Certificate not found.",
+    "errors": null
+  }
+  ```
+}
+
+get {
+  url: {{baseUrl}}/certificate
+  body: none
+  auth: inherit
+}

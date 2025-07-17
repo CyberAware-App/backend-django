@@ -117,5 +117,27 @@ class Feedback(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - {self.feedback}"
+
+
+class Certificate(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="certificate")
+    certificate_id = models.CharField(max_length=50, unique=True)
+    quiz_session = models.ForeignKey(QuizSession, on_delete=models.CASCADE, related_name="certificate")
+    issued_date = models.DateTimeField(default=timezone.now)
+    score = models.DecimalField(max_digits=5, decimal_places=2)
+    is_valid = models.BooleanField(default=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.certificate_id:
+            # Generate unique certificate ID: CERT-YYYYMMDD-USERID
+            date_str = timezone.now().strftime('%Y%m%d')
+            self.certificate_id = f"CERT-{date_str}-{self.user.id:06d}"
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Certificate {self.certificate_id} - {self.user.email}"
+    
+    class Meta:
+        ordering = ['-issued_date']
     
     

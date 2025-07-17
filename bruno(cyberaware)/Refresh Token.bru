@@ -1,0 +1,68 @@
+meta {
+  name: Refresh Token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/token-refresh
+  body: multipartForm
+  auth: inherit
+}
+
+params:query {
+  : 
+}
+
+body:multipart-form {
+  refresh: {{refreshToken}}
+}
+
+script:post-response {
+  const refreshResponse = res.body;
+  
+  if (refreshResponse.data.access){
+    bru.setVar("accessToken", refreshResponse.data.access);
+    console.log("Access Token saved:", refreshResponse.data.access);
+  }else{
+    console.log("Tokens not found in response.");
+  }
+}
+
+docs {
+  ## Refresh Token
+  
+  ### Endpoint
+  `POST /token-refresh`
+  
+  ### Description
+  Refreshes the access token using a valid refresh token.
+  
+  ### Request
+  - **Method:** POST
+  - **Auth:** None
+  - **Body (multipart-form):**
+    - `refresh`: string (required)
+  
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Token refreshed successfully",
+    "data": {
+      "access": "jwt-access-token"
+    }
+  }
+  ```
+  
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Token refresh failed",
+    "errors": {
+      "refresh": "Token is invalid or expired"
+    }
+  }
+  ```
+}

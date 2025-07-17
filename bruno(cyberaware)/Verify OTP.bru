@@ -1,0 +1,57 @@
+meta {
+  name: Verify OTP
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/verify-otp
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  email: 07065175723ferdinand777@gmail.com
+  code: 978260
+}
+
+docs {
+  ## Verify OTP
+
+  ### Endpoint
+  `POST /verify-otp`
+
+  ### Description
+  Verifies a one-time password (OTP) sent to the user’s email (typically for registration or password reset).
+
+  ### Request
+  - **Method:** POST
+  - **Auth:** None
+  - **Body (multipart-form):**
+    - `email`: string (required)
+    - `code`: string (required)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "OTP verified successfully.",
+    "data": {
+      "email": "user@example.com",
+      "first_name": "John",
+      "verified": true
+    }
+  }
+  ```
+  
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Invalid data",
+    "errors": {
+      "code": "Invalid or expired code"
+    }
+  }
+  ```
+}

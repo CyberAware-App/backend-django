@@ -9,7 +9,8 @@ from utils.response import ResponseMixin
 from django.contrib.auth import get_user_model
 from utils.email import send_otp, send_reset_password_otp, validate_otp
 from rest_framework.views import APIView
-from django.http import Http404
+from django.http import Http404, HttpResponse
+from utils.certificate_generator import CertificateGenerator
 
 User = get_user_model()
 
@@ -18,7 +19,8 @@ User = get_user_model()
         summary="User Registration",
         description="Register a new user",
         request=UserProfileSerializer,
-        responses={201: UserProfileSerializer}
+        responses={201: UserProfileSerializer}, 
+        tags = ['Register']
     )
 )
 class UserRegistrationView(generics.GenericAPIView, ResponseMixin):
@@ -38,9 +40,8 @@ class UserRegistrationView(generics.GenericAPIView, ResponseMixin):
         """
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            error_message = serializer.errors
             return self.error_response(
-                error_message,
+                self.format_serializer_errors(serializer.errors),
                 message="Registration failed",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -65,7 +66,8 @@ class UserRegistrationView(generics.GenericAPIView, ResponseMixin):
         summary="User Login",
         description="Login a user",
         request=CustomTokenObtainPairSerializer,
-        responses={200: CustomTokenObtainPairSerializer}
+        responses={200: CustomTokenObtainPairSerializer},
+        tags = ['Login']
     )
 )
 class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
@@ -76,7 +78,7 @@ class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
                 return self.error_response(
-                    serializer.errors,
+                    self.format_serializer_errors(serializer.errors),
                     message="Login failed",
                     status_code=status.HTTP_401_UNAUTHORIZED
                 )
@@ -94,13 +96,13 @@ class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
             )
         except serializers.ValidationError as e:
             return self.error_response(
-                None,
+                self.format_serializer_errors(serializer.errors),
                 message=str(e),
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
             return self.error_response(
-                None,
+                str(e),
                 message="Login failed",
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
@@ -111,7 +113,8 @@ class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
         summary="Token Refresh",
         description="Refresh a JWT token",
         request=CustomTokenRefreshSerializer,
-        responses={200: CustomTokenRefreshSerializer}
+        responses={200: CustomTokenRefreshSerializer},
+        tags = ['Token Refresh']
     )
 )
 class CustomTokenRefreshView(TokenRefreshView, ResponseMixin):
@@ -122,7 +125,7 @@ class CustomTokenRefreshView(TokenRefreshView, ResponseMixin):
             serializer = self.get_serializer(data=request.data)
             if not serializer.is_valid():
                 return self.error_response(
-                    serializer.errors,
+                    self.format_serializer_errors(serializer.errors),
                     message="Token refresh failed",
                     status_code=status.HTTP_401_UNAUTHORIZED
                 )
@@ -149,9 +152,10 @@ class CustomTokenRefreshView(TokenRefreshView, ResponseMixin):
 @extend_schema_view(
     post=extend_schema(
         summary="Verify OTP",
-        description="Verify a user's OTP",
+        description="Verify a user's OTP and automatically log them in",
         request=VerifyOTPSerializer,
-        responses={200: VerifyOTPSerializer}
+        responses={200: VerifyOTPResponseSerializer},
+        tags = ['OTP']
     )
 )
 class VerifyOTPView(APIView, ResponseMixin):
@@ -172,7 +176,7 @@ class VerifyOTPView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -190,9 +194,28 @@ class VerifyOTPView(APIView, ResponseMixin):
         user_profile = UserProfile.objects.get(user=user)
         user_profile.is_verified = True
         user_profile.save()
+        
+        # Auto-login after successful verification
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        
+        # Check if this is the user's first login
+        first_login = user_profile.first_login
+        if first_login:
+            user_profile.first_login = False
+            user_profile.save()
+        
         return self.success_response(
-            {"email": email, "first_name": user_profile.first_name, "verified": True},
-            message="OTP verified successfully.",
+            {
+                "email": email, 
+                "first_name": user_profile.first_name, 
+                "verified": True,
+                "access": access_token,
+                "refresh": refresh_token,
+                "first_login": first_login
+            },
+            message="OTP verified successfully. You are now logged in!",
             status_code=status.HTTP_200_OK
         )
         
@@ -202,7 +225,8 @@ class VerifyOTPView(APIView, ResponseMixin):
         summary="Resend OTP",
         description="Resend an OTP to a user",
         request=ResendOTPSerializer,
-        responses={200: ResendOTPSerializer}
+        responses={200: ResendOTPSerializer},
+        tags = ['OTP']
     )
 )
 class ResendOTPView(APIView, ResponseMixin):
@@ -223,7 +247,7 @@ class ResendOTPView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -255,7 +279,8 @@ class ResendOTPView(APIView, ResponseMixin):
         summary="Forgot Password",
         description="Forgot password",
         request=ForgotPasswordSerializer,
-        responses={200: ForgotPasswordSerializer}
+        responses={200: ForgotPasswordSerializer},
+        tags = ['Password']
     )
 )
 class ForgotPasswordView(APIView, ResponseMixin):
@@ -276,7 +301,7 @@ class ForgotPasswordView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -314,7 +339,8 @@ class ForgotPasswordView(APIView, ResponseMixin):
         summary="Reset Password",
         description="Reset password",
         request=ResetPasswordSerializer,
-        responses={200: ResetPasswordSerializer}
+        responses={200: ResetPasswordSerializer},
+        tags = ['Password']
     )
 )
 class ResetPasswordView(APIView, ResponseMixin):
@@ -335,7 +361,7 @@ class ResetPasswordView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -365,7 +391,8 @@ class ResetPasswordView(APIView, ResponseMixin):
         summary="Change Password",
         description="Change password",
         request=ChangePasswordSerializer,
-        responses={200: ChangePasswordSerializer}
+        responses={200: ChangePasswordSerializer},
+        tags = ['Password']
     )
 )
 class ChangePasswordView(APIView, ResponseMixin):
@@ -386,7 +413,7 @@ class ChangePasswordView(APIView, ResponseMixin):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return self.error_response(
-                serializer.errors,
+                self.format_serializer_errors(serializer.errors),
                 message="Invalid data",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
@@ -411,7 +438,8 @@ class ChangePasswordView(APIView, ResponseMixin):
     get=extend_schema(
         summary="Dashboard",
         description="Get dashboard data",
-        responses={200: DashboardSerializer}
+        responses={200: DashboardSerializer},
+        tags = ['Dashboard']
     )
 )
 class DashboardView(APIView, ResponseMixin):
@@ -436,11 +464,13 @@ class DashboardView(APIView, ResponseMixin):
         except UserModuleProgress.DoesNotExist:
             completed_modules = 0
         total_modules = modules.count()
+        percentage_completed = (completed_modules / total_modules) * 100 if total_modules > 0 else 0
         return self.success_response(
             {
                 "modules": ModuleSerializer(modules, many=True).data,
                 "completed_modules": completed_modules,
-                "total_modules": total_modules
+                "total_modules": total_modules,
+                "percentage_completed": percentage_completed
             },
             message="Dashboard data fetched successfully.",
             status_code=status.HTTP_200_OK
@@ -451,7 +481,8 @@ class DashboardView(APIView, ResponseMixin):
     get=extend_schema(
         summary="Get Module",
         description="Get a module",
-        responses={200: ModuleSerializer}
+        responses={200: ModuleSerializer},
+        tags = ['Module']
     )
 )
 class GetModuleView(APIView, ResponseMixin):
@@ -488,7 +519,8 @@ class GetModuleView(APIView, ResponseMixin):
     post=extend_schema(
         summary="Mark Module As Completed",
         description="Mark a module as completed",
-        responses={200: MarkModuleAsCompletedSerializer}
+        responses={200: MarkModuleAsCompletedSerializer},
+        tags = ['Module']
     )
 )
 class MarkModuleAsCompletedView(APIView, ResponseMixin):
@@ -528,7 +560,8 @@ class MarkModuleAsCompletedView(APIView, ResponseMixin):
     get=extend_schema(
         summary="User Module Progress",
         description="Get user module progress",
-        responses={200: UserModuleProgressSerializer}
+        responses={200: UserModuleProgressSerializer},
+        tags = ['Module']
     )
 )
 class UserModuleProgressView(APIView, ResponseMixin):
@@ -566,7 +599,8 @@ class UserModuleProgressView(APIView, ResponseMixin):
     get=extend_schema(
         summary="Get Module Quiz",
         description="Get a module quiz",
-        responses={200: ModuleQuizSerializer}
+        responses={200: ModuleQuizSerializer},
+        tags = ['Module']
     )
 )
 class GetModuleQuizView(APIView, ResponseMixin):
@@ -599,4 +633,255 @@ class GetModuleQuizView(APIView, ResponseMixin):
             message="Module quiz fetched successfully.",
             status_code=status.HTTP_200_OK
         )
+        
+
+@extend_schema_view(
+    get=extend_schema(
+        summary="Get Final Quiz",
+        description="Get final quiz questions",
+        responses={200: FinalQuizSerializer}
+    ),
+    post=extend_schema(
+        summary="Submit Final Quiz",
+        description="Submit final quiz answers and get results",
+        request=FinalQuizSubmissionSerializer,
+        responses={200: FinalQuizResultSerializer}
+    )
+)
+class FinalQuizView(APIView, ResponseMixin):
+    """
+    Final Quiz View - Optimized for performance
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Get Final Quiz Questions
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object
+        """
+        try:
+            quiz_session = QuizSession.objects.get(user=request.user)
+            if quiz_session.attempt_number >= 5:
+                return self.error_response(
+                    None,
+                    message="You have reached the maximum number of attempts (5).",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+        except QuizSession.DoesNotExist:
+            pass
+        final_quiz = FinalQuiz.objects.all().order_by('id')
+        serializer = FinalQuizSerializer(final_quiz, many=True)
+        
+        return self.success_response(
+            serializer.data,
+            message="Final quiz fetched successfully.",
+            status_code=status.HTTP_200_OK
+        )
+    
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Submit Final Quiz Answers
+        Args:
+            request: The request object with quiz answers
+        Returns:
+            Response: The response object with score and result
+        """
+        user = request.user
+        answers_data = request.data
+        if not answers_data:
+            return self.error_response(
+                None,
+                message="No answers provided.",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            quiz_session, created = QuizSession.objects.get_or_create(
+                user=user,
+                defaults={'attempt_number': 1, 'passed': False}
+            )
+            if not created:
+                quiz_session.attempt_number += 1
+                quiz_session.save(update_fields=['attempt_number'])
+            
+            correct_answers_dict = {
+                quiz.question: quiz.correct_answer 
+                for quiz in FinalQuiz.objects.all()
+            }
+            correct_count = 0
+            user_answers_to_create = []
+            
+            for data in answers_data:
+                question_text = data.get('question')
+                selected_option = data.get('selected_option')
+                
+                # Find the FinalQuiz object by question text
+                try:
+                    final_quiz_obj = FinalQuiz.objects.get(question=question_text)
+                    is_correct = final_quiz_obj.correct_answer == selected_option
+                    if is_correct:
+                        correct_count += 1
+                        
+                    user_answers_to_create.append(
+                        UserQuizAnswer(
+                            session=quiz_session,
+                            question=final_quiz_obj,
+                            selected_option=selected_option,
+                            is_correct=is_correct
+                        )
+                    )
+                except FinalQuiz.DoesNotExist:
+                    # Skip questions that don't exist in the database
+                    continue
+            
+            if user_answers_to_create:
+                UserQuizAnswer.objects.bulk_create(user_answers_to_create)
+            
+            total_questions = len(answers_data)
+            score = (correct_count / total_questions) * 100 if total_questions > 0 else 0
+            passed = score >= 80
+            quiz_session.passed = passed
+            quiz_session.save(update_fields=['passed'])
+            
+            # Auto-generate certificate if passed
+            certificate_data = None
+            if passed:
+                try:
+                    if not Certificate.objects.filter(user=user, is_valid=True).exists():
+                        certificate = Certificate.objects.create(
+                            user=user,
+                            quiz_session=quiz_session,
+                            score=score
+                        )
+                        certificate_data = CertificateSerializer(certificate, context={'request': request}).data
+                except Exception as e:
+                    print(f"Certificate generation failed: {e}")
+            
+            response_data = {
+                "score": f"{score:.1f}%",
+                "passed": passed,
+                "correct_answers": correct_count,
+                "total_questions": total_questions,
+                "attempt_number": quiz_session.attempt_number
+            }
+            
+            if certificate_data:
+                response_data["certificate"] = certificate_data
+            
+            return self.success_response(
+                response_data,
+                message="Final Exam submitted successfully." + (" Certificate generated!" if passed else ""),
+                status_code=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return self.error_response(
+                None,
+                message=str(e),
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+
+@extend_schema_view(
+    get=extend_schema(
+        summary="Get User Certificate",
+        description="Get the current user's certificate if they have passed the final quiz",
+        responses={200: CertificateSerializer, 404: "Certificate not found"},
+        tags=['Certificate']
+    )
+)
+class CertificateView(APIView, ResponseMixin):
+    """
+    Certificate View - Retrieve user certificates (auto-generated when quiz passed)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Get user's certificate
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object with certificate data
+        """
+        try:
+            certificate = Certificate.objects.get(user=request.user, is_valid=True)
+            serializer = CertificateSerializer(certificate, context={'request': request})
+            return self.success_response(
+                serializer.data,
+                message="Certificate retrieved successfully.",
+                status_code=status.HTTP_200_OK
+            )
+        except Certificate.DoesNotExist:
+            return self.error_response(
+                None,
+                message="Certificate not found. You may not have passed the final quiz yet.",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+
+
+@extend_schema_view(
+    get=extend_schema(
+        summary="Download Certificate",
+        description="Download certificate as PDF",
+        responses={200: "PDF file", 404: "Certificate not found"},
+        tags=['Certificate']
+    )
+)
+class CertificateDownloadView(APIView):
+    """
+    Certificate Download View - Returns actual PDF file
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Download certificate as PDF
+        Args:
+            request: The request object
+        Returns:
+            HttpResponse: PDF file response
+        """
+        certificate_id = kwargs.get('certificate_id')
+        
+        try:
+            certificate = Certificate.objects.get(
+                certificate_id=certificate_id,
+                user=request.user,
+                is_valid=True
+            )
+        except Certificate.DoesNotExist:
+            return HttpResponse(
+                "Certificate not found or invalid.",
+                status=404,
+                content_type='text/plain'
+            )
+        
+        try:
+            generator = CertificateGenerator()
+            certificate_data = {
+                'user_name': f"{certificate.user.user_profile.first_name} {certificate.user.user_profile.last_name}",
+                'user_email': certificate.user.email,
+                'score': f"{certificate.score}",
+                'issued_date': certificate.issued_date.strftime('%B %d, %Y'),
+                'certificate_id': certificate.certificate_id
+            }
+            
+            pdf_content = generator.generate_certificate_pdf(certificate_data)
+            response = HttpResponse(
+                pdf_content,
+                content_type='application/pdf'
+            )
+            response['Content-Disposition'] = f'attachment; filename="certificate_{certificate_id}.pdf"'
+            return response
+            
+        except Exception as e:
+            return HttpResponse(
+                f"Error generating certificate: {str(e)}",
+                status=500,
+                content_type='text/plain'
+            )
+            
         
