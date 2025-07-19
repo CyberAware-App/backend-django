@@ -33,7 +33,7 @@ class TestViewsEndpoints:
         assert "percentage_completed" in data["data"]
 
     def test_get_module_view(self):
-        module = Module.objects.create(name="Test Module", description="desc", content="content")
+        module = Module.objects.create(name="Test Module", description="desc", module_type="video", google_drive_file_id="1234567890")
         response = self.client.get(reverse('get-module', kwargs={"module_id": module.id}))
         assert response.status_code == status.HTTP_200_OK
         data = response.data
@@ -41,7 +41,7 @@ class TestViewsEndpoints:
         assert "module" in data["data"]
 
     def test_mark_module_as_completed_view(self):
-        module = Module.objects.create(name="Test Module", description="desc", content="content")
+        module = Module.objects.create(name="Test Module", description="desc", module_type="video", google_drive_file_id="1234567890")
         response = self.client.post(reverse('mark-module-as-completed', kwargs={"module_id": module.id}))
         assert response.status_code == status.HTTP_200_OK
         data = response.data
@@ -49,7 +49,7 @@ class TestViewsEndpoints:
         assert data["data"]["completed"] is True
 
     def test_user_module_progress_view(self):
-        module = Module.objects.create(name="Test Module", description="desc", content="content")
+        module = Module.objects.create(name="Test Module", description="desc", module_type="video", google_drive_file_id="1234567890")
         UserModuleProgress.objects.create(user=self.user, module=module, completed=True)
         response = self.client.get(reverse('module-progress'))
         assert response.status_code == status.HTTP_200_OK
@@ -58,7 +58,7 @@ class TestViewsEndpoints:
         assert isinstance(data["data"], list)
 
     def test_get_module_quiz_view(self):
-        module = Module.objects.create(name="Test Module", description="desc", content="content")
+        module = Module.objects.create(name="Test Module", description="desc", module_type="video", google_drive_file_id="1234567890")
         response = self.client.get(reverse('get-module-quiz', kwargs={"module_id": module.id}))
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
 
