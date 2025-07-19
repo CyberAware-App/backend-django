@@ -102,7 +102,7 @@ class CustomTokenObtainPairView(TokenObtainPairView, ResponseMixin):
             )
         except Exception as e:
             return self.error_response(
-                str(e),
+                {"message": str(e)},
                 message="Login failed",
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
