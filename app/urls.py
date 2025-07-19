@@ -20,6 +20,7 @@ urlpatterns = [
     path('quiz', FinalQuizView.as_view(), name='final-quiz'),
     path('certificate', CertificateView.as_view(), name='certificate'),
     path('certificate/<str:certificate_id>/download', CertificateDownloadView.as_view(), name='certificate-download'),
+    path('session', CheckUserSessionView.as_view(), name='check-user-session'),
     path('schema', SpectacularAPIView.as_view(), name='schema'),
     path('swagger', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

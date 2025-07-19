@@ -1,0 +1,49 @@
+meta {
+  name: Check User Session 
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/session
+  body: none
+  auth: inherit
+}
+
+docs{
+  ## Check User Session
+
+  ### Endpoint
+  `GET /session`
+
+  ### Description
+  Check user's session to confirm is the accessToken is still valid.
+
+  ### Request
+  - **Method:** GET
+  - **Auth:** Bearer token required (`accessToken`)
+
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Access Token is Valid.",
+    "data": {
+              "email": user.email,
+              "first_name": user_profile.first_name,
+              "last_name": user_profile.last_name,
+              "is_verified": user_profile.is_verified,
+              "has_session": True
+            }
+  }
+  ```
+
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "User is not verified",
+    "data": none
+  }
+  ```
+}

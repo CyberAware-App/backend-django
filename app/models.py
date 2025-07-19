@@ -33,15 +33,28 @@ class OTP(models.Model):
 
 
 class Module(models.Model):
+    MODULE_TYPE_CHOICES = [
+        ('video', 'Video'),
+        ('image', 'Image'),
+        ('text', 'Text'),
+    ]
+    
     name = models.CharField(max_length=255)
     description = models.TextField()
-    content = models.JSONField()
+    module_type = models.CharField(max_length=255, choices=MODULE_TYPE_CHOICES, default="video")
+    google_drive_file_id = models.CharField(max_length=255, default="1234567890")
     created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['created_at']
     
     def __str__(self):
         return self.name
     
+    @property
+    def file_url(self):
+        return f"https://drive.google.com/file/d/{self.google_drive_file_id}/preview"
     
 class UserModuleProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="module_progress")

@@ -459,7 +459,7 @@ class DashboardView(APIView, ResponseMixin):
         user = request.user
         modules = Module.objects.all().order_by('id')
         try:
-            user_progress = UserModuleProgress.objects.filter(user=user)
+            user_progress = UserModuleProgress.objects.filter(user=user).select_related('module')
             completed_modules = user_progress.filter(completed=True).count()
         except UserModuleProgress.DoesNotExist:
             completed_modules = 0
@@ -626,7 +626,7 @@ class GetModuleQuizView(APIView, ResponseMixin):
                 message="Module not found.",
                 status_code=status.HTTP_404_NOT_FOUND
             )
-        module_quiz = ModuleQuiz.objects.filter(module=module).order_by('id')
+        module_quiz = ModuleQuiz.objects.filter(module=module).select_related('module').order_by('id')
         serializer = ModuleQuizSerializer(module_quiz, many=True)
         return self.success_response(
             serializer.data,
@@ -706,25 +706,22 @@ class FinalQuizView(APIView, ResponseMixin):
             if not created:
                 quiz_session.attempt_number += 1
                 quiz_session.save(update_fields=['attempt_number'])
-            
-            correct_answers_dict = {
-                quiz.question: quiz.correct_answer 
+            # Prefetch all final quiz questions to avoid N+1 queries
+            final_quiz_questions = {
+                quiz.question: quiz 
                 for quiz in FinalQuiz.objects.all()
             }
             correct_count = 0
             user_answers_to_create = []
-            
             for data in answers_data:
                 question_text = data.get('question')
                 selected_option = data.get('selected_option')
-                
-                # Find the FinalQuiz object by question text
-                try:
-                    final_quiz_obj = FinalQuiz.objects.get(question=question_text)
+                # Use the prefetched data instead of querying individually
+                final_quiz_obj = final_quiz_questions.get(question_text)
+                if final_quiz_obj:
                     is_correct = final_quiz_obj.correct_answer == selected_option
                     if is_correct:
                         correct_count += 1
-                        
                     user_answers_to_create.append(
                         UserQuizAnswer(
                             session=quiz_session,
@@ -733,19 +730,13 @@ class FinalQuizView(APIView, ResponseMixin):
                             is_correct=is_correct
                         )
                     )
-                except FinalQuiz.DoesNotExist:
-                    # Skip questions that don't exist in the database
-                    continue
-            
             if user_answers_to_create:
                 UserQuizAnswer.objects.bulk_create(user_answers_to_create)
-            
             total_questions = len(answers_data)
             score = (correct_count / total_questions) * 100 if total_questions > 0 else 0
             passed = score >= 80
             quiz_session.passed = passed
             quiz_session.save(update_fields=['passed'])
-            
             # Auto-generate certificate if passed
             certificate_data = None
             if passed:
@@ -759,7 +750,6 @@ class FinalQuizView(APIView, ResponseMixin):
                         certificate_data = CertificateSerializer(certificate, context={'request': request}).data
                 except Exception as e:
                     print(f"Certificate generation failed: {e}")
-            
             response_data = {
                 "score": f"{score:.1f}%",
                 "passed": passed,
@@ -767,10 +757,8 @@ class FinalQuizView(APIView, ResponseMixin):
                 "total_questions": total_questions,
                 "attempt_number": quiz_session.attempt_number
             }
-            
             if certificate_data:
                 response_data["certificate"] = certificate_data
-            
             return self.success_response(
                 response_data,
                 message="Final Exam submitted successfully." + (" Certificate generated!" if passed else ""),
@@ -807,7 +795,7 @@ class CertificateView(APIView, ResponseMixin):
             Response: The response object with certificate data
         """
         try:
-            certificate = Certificate.objects.get(user=request.user, is_valid=True)
+            certificate = Certificate.objects.select_related('user__user_profile', 'quiz_session').get(user=request.user, is_valid=True)
             serializer = CertificateSerializer(certificate, context={'request': request})
             return self.success_response(
                 serializer.data,
@@ -845,9 +833,8 @@ class CertificateDownloadView(APIView):
             HttpResponse: PDF file response
         """
         certificate_id = kwargs.get('certificate_id')
-        
         try:
-            certificate = Certificate.objects.get(
+            certificate = Certificate.objects.select_related('user__user_profile').get(
                 certificate_id=certificate_id,
                 user=request.user,
                 is_valid=True
@@ -884,4 +871,45 @@ class CertificateDownloadView(APIView):
                 content_type='text/plain'
             )
             
-        
+
+class CheckUserSessionView(APIView, ResponseMixin):
+    """
+    Check User Session View - Check if user has a session
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Check User Session View
+        Args:
+            request: The request object
+        Returns:
+            Response: The response object
+        """
+        user = request.user
+        try:
+            user_profile = UserProfile.objects.select_related('user').get(user=user)
+        except UserProfile.DoesNotExist:
+            return self.error_response(
+                None,
+                message="User profile not found.",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        if user_profile.is_verified:
+            return self.success_response(
+                {
+                    "email": user.email,
+                    "first_name": user_profile.first_name,
+                    "last_name": user_profile.last_name,
+                    "is_verified": user_profile.is_verified,
+                    "has_session": True
+                 },
+                message="Access Token is Valid.",
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            return self.error_response(
+                None,
+                message="User is not verified.",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
