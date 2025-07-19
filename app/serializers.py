@@ -112,9 +112,13 @@ class ChangePasswordSerializer(serializers.Serializer):
     
     
 class ModuleSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
     class Meta:
         model = Module
-        fields = ['id', 'name', 'description', 'content']
+        fields = ['id', 'name', 'description', 'module_type', 'file_url']
+        
+    def get_file_url(self, obj):
+        return obj.file_url
 
 
 class UserModuleProgressSerializer(serializers.ModelSerializer):

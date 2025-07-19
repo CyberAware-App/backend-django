@@ -12,6 +12,7 @@ docs {
 
   ### Description
   Retrieve information about a specific module.
+  Module contents are stored in a Gdrive so you will pass the url in iframe tag
 
   ### Request
   - **Method:** GET
@@ -28,7 +29,8 @@ docs {
         "id": 1,
         "name": "Module 1",
         "description": "...",
-        "content": { }
+        "module_type: "video",
+        "file_url": "https://drive.google.com/file/d/1234567890/preview"
       }
     }
   }

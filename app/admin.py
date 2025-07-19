@@ -18,7 +18,7 @@ class OTPAdmin(admin.ModelAdmin):
     
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
-    list_display = ['name', 'description']
+    list_display = ['id', 'name', 'description', 'module_type']
     search_fields = ['name']
     
     
