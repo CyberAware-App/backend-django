@@ -27,6 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
+MUX_TOKEN_ID = os.getenv("MUX_TOKEN_ID")
+MUX_TOKEN_SECRET = os.getenv("MUX_TOKEN_SECRET")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

@@ -4,21 +4,34 @@ meta {
   seq: 10
 }
 
+get {
+  url: {{baseUrl}}/module/1
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
 docs {
   ## Get Module
-
+  
   ### Endpoint
   `GET /module/{module_id}`
-
+  
   ### Description
   Retrieve information about a specific module.
   Module contents are stored in a Gdrive so you will pass the url in iframe tag
-
+  
+  ###
+  If using the video element, make use of the mux_playback_url although you will still need to write a hls js script. If using the mux-player component (straightforward) use the mux_playback
+  
   ### Request
   - **Method:** GET
   - **Auth:** Bearer token required (`accessToken`)
   - **URL Parameter:** `module_id` (integer, required)
-
+  
   ### Success Response
   ```json
   {
@@ -30,12 +43,13 @@ docs {
         "name": "Module 1",
         "description": "...",
         "module_type: "video",
-        "file_url": "https://drive.google.com/file/d/1234567890/preview"
+        "mux_playback_url": "https://stream.mux.com/cnsudjn4845fg48.m3u8",
+        "mux_playback": "cnsudjn4845fg48"
       }
     }
   }
   ```
-
+  
   ### Error Response
   ```json
   {
@@ -44,10 +58,4 @@ docs {
     "errors": null
   }
   ```
-}
-
-get {
-  url: {{baseUrl}}/module/1
-  body: none
-  auth: inherit
 }

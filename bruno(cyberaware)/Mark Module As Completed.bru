@@ -4,20 +4,30 @@ meta {
   seq: 11
 }
 
+post {
+  url: {{baseUrl}}/module/1/complete
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
 docs {
   ## Mark Module As Completed
-
+  
   ### Endpoint
   `POST /module/{module_id}/complete`
-
+  
   ### Description
   Mark a specific module as completed for the authenticated user.
-
+  
   ### Request
   - **Method:** POST
   - **Auth:** Bearer token required (`accessToken`)
   - **URL Parameter:** `module_id` (integer, required)
-
+  
   ### Success Response
   ```json
   {
@@ -34,7 +44,7 @@ docs {
     }
   }
   ```
-
+  
   ### Error Response
   ```json
   {
@@ -43,10 +53,4 @@ docs {
     "errors": null
   }
   ```
-}
-
-post {
-  url: {{baseUrl}}/module/1/complete
-  body: none
-  auth: inherit
 }

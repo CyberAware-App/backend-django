@@ -43,6 +43,9 @@ class Module(models.Model):
     description = models.TextField()
     module_type = models.CharField(max_length=255, choices=MODULE_TYPE_CHOICES, default="video")
     google_drive_file_id = models.CharField(max_length=255, default="1234567890")
+    mux_asset_id = models.CharField(max_length=255, blank=True, null=True)
+    mux_playback_id = models.CharField(max_length=255, blank=True, null=True)
+    mux_status = models.CharField(max_length=50, default="pending")  # pending, ready, errored
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -53,8 +56,15 @@ class Module(models.Model):
         return self.name
     
     @property
-    def file_url(self):
-        return f"https://drive.google.com/file/d/{self.google_drive_file_id}/preview"
+    def mux_playback_url(self):
+        if self.mux_playback_id:
+            return f"https://stream.mux.com/{self.mux_playback_id}.m3u8"
+        return None
+    
+    @property
+    def mux_playback(self):
+        return self.mux_playback_id
+    
     
 class UserModuleProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="module_progress")

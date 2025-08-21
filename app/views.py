@@ -9,8 +9,10 @@ from utils.response import ResponseMixin
 from django.contrib.auth import get_user_model
 from utils.email import send_otp, send_reset_password_otp, validate_otp
 from rest_framework.views import APIView
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from utils.certificate_generator import CertificateGenerator
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 User = get_user_model()
 
@@ -913,3 +915,34 @@ class CheckUserSessionView(APIView, ResponseMixin):
                 message="User is not verified.",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
+            
+            
+@csrf_exempt
+def mux_webhook(request):
+    if request.method == "POST":
+        payload = json.loads(request.body)
+        event_type = payload.get("type")
+        data = payload.get("data", {})
+
+        if event_type == "video.asset.ready":
+            asset_id = data.get("id")
+            playback_ids = data.get("playback_ids", [])
+            if asset_id:
+                try:
+                    module = Module.objects.get(mux_asset_id=asset_id)
+                    module.mux_status = "ready"
+                    if playback_ids:
+                        module.mux_playback_id = playback_ids[0]["id"]
+                    module.save()
+                except Module.DoesNotExist:
+                    pass
+        elif event_type == "video.asset.errored":
+            asset_id = data.get("id")
+            try:
+                module = Module.objects.get(mux_asset_id=asset_id)
+                module.mux_status = "errored"
+                module.save()
+            except Module.DoesNotExist:
+                pass
+
+        return JsonResponse({"status": "ok"})
