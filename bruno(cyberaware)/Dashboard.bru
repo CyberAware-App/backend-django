@@ -3,25 +3,30 @@ meta {
   type: http
   seq: 9
 }
+
 get {
   url: {{baseUrl}}/dashboard
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
 }
 
 docs {
   ## Dashboard
-
+  
   ### Endpoint
   `GET /dashboard`
-
+  
   ### Description
   Retrieve dashboard data for the authenticated user, such as progress, stats, and notifications.
-
+  
   ### Request
   - **Method:** GET
   - **Auth:** Bearer token required (`accessToken`)
-
+  
   ### Success Response
   ```json
   {
@@ -34,7 +39,8 @@ docs {
           "name": "Module 1",
           "description": "...",
           "module_type: "video",
-          "file_url": "https://drive.google.com/file/d/1234567890/preview"
+          "mux_playback_url": "https://stream.mux.com/cnsudjn4845fg48.m3u8",
+          "mux_playback": "cnsudjn4845fg48"
         }
       ],
       "completed_modules": 2,
@@ -43,7 +49,7 @@ docs {
     }
   }
   ```
-
+  
   ### Error Response
   ```json
   {

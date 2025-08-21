@@ -112,14 +112,17 @@ class ChangePasswordSerializer(serializers.Serializer):
     
     
 class ModuleSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField()
+    mux_playback_url = serializers.SerializerMethodField()
+    mux_playback = serializers.SerializerMethodField()
     class Meta:
         model = Module
-        fields = ['id', 'name', 'description', 'module_type', 'file_url']
+        fields = ['id', 'name', 'description', 'module_type', 'mux_playback_url', 'mux_playback']
         
-    def get_file_url(self, obj):
-        return obj.file_url
-
+    def get_mux_playback_url(self, obj):
+        return obj.mux_playback_url
+    
+    def get_mux_playback(self, obj):
+        return obj.mux_playback
 
 class UserModuleProgressSerializer(serializers.ModelSerializer):
     module = ModuleSerializer()
