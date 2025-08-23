@@ -738,7 +738,8 @@ class FinalQuizView(APIView, ResponseMixin):
             score = (correct_count / total_questions) * 100 if total_questions > 0 else 0
             passed = score >= 80
             quiz_session.passed = passed
-            quiz_session.save(update_fields=['passed'])
+            quiz_session.score = score
+            quiz_session.save(update_fields=['passed', 'score'])
             # Auto-generate certificate if passed
             certificate_data = None
             if passed:
