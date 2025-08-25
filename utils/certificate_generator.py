@@ -115,7 +115,7 @@ class CertificateGenerator:
             pagesize=page_size,
             rightMargin=48,
             leftMargin=48,
-            topMargin=56,
+            topMargin=80,
             bottomMargin=56
         )
         
@@ -128,7 +128,7 @@ class CertificateGenerator:
         story.append(Spacer(1, 6))
         
         # Add subtitle
-        subtitle = Paragraph("This certifies that", self.subtitle_style)
+        subtitle = Paragraph("This is to certify that", self.subtitle_style)
         story.append(subtitle)
         story.append(Spacer(1, 8))
         
@@ -140,7 +140,7 @@ class CertificateGenerator:
         # Add completion text
         course_name = certificate_data.get('course', 'Cyberaware Program')
         completion_text = Paragraph(
-            f"has successfully passed the {course_name} assessment with a score of {certificate_data['score']}%",
+            f"has successfully completed the {course_name} assessment with a score of {certificate_data['score']}%",
             self.content_style
         )
         story.append(completion_text)
@@ -152,7 +152,7 @@ class CertificateGenerator:
         story.append(declared_title_para)
 
         # Space reserved so the center badge placeholder sits right beneath the title
-        story.append(Spacer(1, 120))
+        story.append(Spacer(1, 150))
         
         # Add issue date
         date_text = Paragraph(
@@ -191,7 +191,7 @@ class CertificateGenerator:
             canvas.roundRect(30, 30, page_width - 60, page_height - 60, 10, stroke=1, fill=0)
 
             # Watermark: use image if available, else draw text watermark
-            wm_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'watermark.svg')
+            wm_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'watermark.png')
             if os.path.exists(wm_path):
                 canvas.saveState()
                 canvas.translate(page_width/2, page_height/2)
@@ -214,8 +214,8 @@ class CertificateGenerator:
             # Center badge image if present; otherwise show placeholder rings
             badge_size = 140
             badge_cx = page_width / 2
-            badge_cy = page_height / 2 + 40
-            badge_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'badge.svg')
+            badge_cy = page_height / 2 - 80
+            badge_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'badge.png')
             if os.path.exists(badge_path):
                 canvas.drawImage(
                     badge_path,
@@ -245,24 +245,23 @@ class CertificateGenerator:
                 canvas.restoreState()
 
             # Logo: draw image if available, else dashed placeholder box
-            logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.svg')
+            logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
             if os.path.exists(logo_path):
-                canvas.drawImage(logo_path, 48, page_height - 120, width=120, height=60, preserveAspectRatio=True, mask='auto')
+                canvas.drawImage(logo_path, 10, page_height - 140, width=160, height=80, preserveAspectRatio=True, mask='auto')
             else:
                 canvas.setDash(4, 4)
                 canvas.setStrokeColor(colors.grey)
-                canvas.rect(48, page_height - 120, 120, 60, fill=0, stroke=1)
+                canvas.rect(48, page_height - 140, 160, 80, fill=0, stroke=1)
                 canvas.setFont('Helvetica', 9)
                 canvas.setFillColor(colors.grey)
-                canvas.drawString(54, page_height - 85, 'LOGO HERE (120x60)')
+                canvas.drawString(54, page_height - 95, 'LOGO HERE (160x80)')
                 canvas.setDash()
 
-            # Signature: draw image if available, else placeholder and line/label
-            sig_w = 220
-            sig_h = 60
+            sig_w = 320
+            sig_h = 100
             sig_x = page_width - 48 - sig_w
-            sig_y = 72
-            signature_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'signature.svg')
+            sig_y = 80
+            signature_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'signature.png')
             if os.path.exists(signature_path):
                 canvas.drawImage(signature_path, sig_x, sig_y, width=sig_w, height=sig_h, preserveAspectRatio=True, mask='auto')
             else:
@@ -285,61 +284,61 @@ class CertificateGenerator:
         
         return pdf_content
     
-    def generate_simple_certificate_pdf(self, certificate_data):
-        """
-        Generate a simpler PDF certificate with table layout
+    # def generate_simple_certificate_pdf(self, certificate_data):
+    #     """
+    #     Generate a simpler PDF certificate with table layout
         
-        Args:
-            certificate_data (dict): Certificate information
+    #     Args:
+    #         certificate_data (dict): Certificate information
             
-        Returns:
-            bytes: PDF file content
-        """
-        buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4)
+    #     Returns:
+    #         bytes: PDF file content
+    #     """
+    #     buffer = io.BytesIO()
+    #     doc = SimpleDocTemplate(buffer, pagesize=A4)
         
-        story = []
+    #     story = []
         
-        # Title
-        title = Paragraph("CERTIFICATE OF COMPLETION", self.title_style)
-        story.append(title)
-        story.append(Spacer(1, 30))
+    #     # Title
+    #     title = Paragraph("CERTIFICATE OF COMPLETION", self.title_style)
+    #     story.append(title)
+    #     story.append(Spacer(1, 30))
         
-        # Certificate details table
-        data = [
-            ['Name:', certificate_data['user_name']],
-            ['Email:', certificate_data['user_email']],
-            ['Score:', f"{certificate_data['score']}%"],
-            ['Issued Date:', certificate_data['issued_date']],
-            ['Certificate ID:', certificate_data['certificate_id']],
-        ]
+    #     # Certificate details table
+    #     data = [
+    #         ['Name:', certificate_data['user_name']],
+    #         ['Email:', certificate_data['user_email']],
+    #         ['Score:', f"{certificate_data['score']}%"],
+    #         ['Issued Date:', certificate_data['issued_date']],
+    #         ['Certificate ID:', certificate_data['certificate_id']],
+    #     ]
         
-        table = Table(data, colWidths=[2*inch, 4*inch])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('BACKGROUND', (0, 0), (0, -1), colors.grey),
-            ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+    #     table = Table(data, colWidths=[2*inch, 4*inch])
+    #     table.setStyle(TableStyle([
+    #         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+    #         ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+    #         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+    #         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+    #         ('FONTSIZE', (0, 0), (-1, -1), 12),
+    #         ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+    #         ('BACKGROUND', (0, 0), (0, -1), colors.grey),
+    #         ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
+    #         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    #         ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    #     ]))
         
-        story.append(table)
-        story.append(Spacer(1, 30))
+    #     story.append(table)
+    #     story.append(Spacer(1, 30))
         
-        # Completion message
-        completion_msg = Paragraph(
-            f"Congratulations! You have successfully passed the Cyberaware Program assessment with a score of {certificate_data['score']}%",
-            self.content_style
-        )
-        story.append(completion_msg)
+    #     # Completion message
+    #     completion_msg = Paragraph(
+    #         f"Congratulations! You have successfully passed the Cyberaware Program assessment with a score of {certificate_data['score']}%",
+    #         self.content_style
+    #     )
+    #     story.append(completion_msg)
         
-        doc.build(story)
-        pdf_content = buffer.getvalue()
-        buffer.close()
+    #     doc.build(story)
+    #     pdf_content = buffer.getvalue()
+    #     buffer.close()
         
-        return pdf_content 
+    #     return pdf_content 
