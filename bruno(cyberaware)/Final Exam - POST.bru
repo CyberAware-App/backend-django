@@ -4,15 +4,50 @@ meta {
   seq: 14
 }
 
+post {
+  url: {{baseUrl}}/quiz
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  [
+    {
+      "question": "What does CIA stand for in cybersecurity?",
+      "selected_option": "B"
+    },
+    {
+      "question": "Which of the following is NOT a type of malware?",
+      "selected_option": "C"
+    },
+    {
+      "question": "A vulnerability is:",
+      "selected_option": "B"
+    },
+    {
+      "question": "Which principle ensures that data has not been altered?",
+      "selected_option": "B"
+    },
+    {
+      "question": "What is a zero-day exploit?",
+      "selected_option": "C"
+    }
+  ]
+}
+
 docs {
   ## Final Exam - Submit Answers
-
+  
   ### Endpoint
   `POST /quiz`
-
+  
   ### Description
   Submit answers for the final exam quiz.
-
+  
   ### Request
   - **Method:** POST
   - **Auth:** Bearer token required (`accessToken`)
@@ -25,7 +60,7 @@ docs {
       }
    ]
    ```
-
+  
   ### Success Response
   ```json
   {
@@ -40,7 +75,7 @@ docs {
     }
   }
   ```
-
+  
   ### Error Response
   ```json
   {
@@ -51,10 +86,4 @@ docs {
     }
   }
   ```
-}
-
-post {
-  url: {{baseUrl}}/quiz
-  body: none
-  auth: inherit
 }

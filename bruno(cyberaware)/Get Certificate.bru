@@ -4,19 +4,29 @@ meta {
   seq: 15
 }
 
+get {
+  url: {{baseUrl}}/certificate
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
 docs {
   ## Get Certificate
-
+  
   ### Endpoint
   `GET /certificate`
-
+  
   ### Description
   Retrieve the authenticated user's certificate information.
-
+  
   ### Request
   - **Method:** GET
   - **Auth:** Bearer token required (`accessToken`)
-
+  
   ### Success Response
   ```json
   {
@@ -33,7 +43,7 @@ docs {
     }
   }
   ```
-
+  
   ### Error Response
   ```json
   {
@@ -42,10 +52,4 @@ docs {
     "errors": null
   }
   ```
-}
-
-get {
-  url: {{baseUrl}}/certificate
-  body: none
-  auth: inherit
 }

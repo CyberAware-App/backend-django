@@ -191,7 +191,7 @@ class CertificateSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request:
             return request.build_absolute_uri(
-                f'/api/certificates/{obj.certificate_id}/download/'
+                f'/api/certificate/{obj.certificate_id}/download'
             )
         return None
 

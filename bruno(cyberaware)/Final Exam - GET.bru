@@ -4,19 +4,29 @@ meta {
   seq: 13
 }
 
+get {
+  url: {{baseUrl}}/quiz
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
 docs {
   ## Final Exam - Get Questions
-
+  
   ### Endpoint
   `GET /quiz`
-
+  
   ### Description
   Retrieve the list of questions for the final exam quiz.
-
+  
   ### Request
   - **Method:** GET
   - **Auth:** Bearer token required (`accessToken`)
-
+  
   ### Success Response
   ```json
   {
@@ -25,12 +35,17 @@ docs {
     "data": [
       {
         "question": "...",
-        "options": ["A", "B", "C", "D"]
+        "options":{
+          "a":"",
+          "b":"",
+          "c":"",
+          "d":""
+        }
       }
     ]
   }
   ```
-
+  
   ### Error Response
   ```json
   {
@@ -39,10 +54,4 @@ docs {
     "errors": null
   }
   ```
-}
-
-get {
-  url: {{baseUrl}}/quiz
-  body: none
-  auth: inherit
 }

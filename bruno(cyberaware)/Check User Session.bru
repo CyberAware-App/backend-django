@@ -1,5 +1,5 @@
 meta {
-  name: Check User Session 
+  name: Check User Session
   type: http
   seq: 17
 }
@@ -7,22 +7,26 @@ meta {
 get {
   url: {{baseUrl}}/session
   body: none
-  auth: inherit
+  auth: bearer
 }
 
-docs{
-  ## Check User Session
+auth:bearer {
+  token: {{accessToken}}
+}
 
+docs {
+  ## Check User Session
+  
   ### Endpoint
   `GET /session`
-
+  
   ### Description
   Check user's session to confirm is the accessToken is still valid.
-
+  
   ### Request
   - **Method:** GET
   - **Auth:** Bearer token required (`accessToken`)
-
+  
   ### Success Response
   ```json
   {
@@ -37,7 +41,7 @@ docs{
             }
   }
   ```
-
+  
   ### Error Response
   ```json
   {

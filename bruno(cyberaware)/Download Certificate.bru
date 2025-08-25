@@ -4,24 +4,34 @@ meta {
   seq: 16
 }
 
+get {
+  url: {{baseUrl}}/certificate/CERT-20250824-000002/download
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
 docs {
   ## Download Certificate
-
+  
   ### Endpoint
   `GET /certificate/{certificate_id}/download`
-
+  
   ### Description
   Download a specific certificate by its ID. The certificate is returned as a file (PDF).
-
+  
   ### Request
   - **Method:** GET
   - **Auth:** Bearer token required (`accessToken`)
   - **URL Parameter:** `certificate_id` (string, required)
-
+  
   ### Success Response
   - Content-Type: application/pdf
   - File download (certificate)
-
+  
   ### Error Response
   ```json
   {
@@ -30,10 +40,4 @@ docs {
     "errors": null
   }
   ```
-}
-
-get {
-  url: certificate/<str:certificate_id>/download
-  body: none
-  auth: inherit
 }
