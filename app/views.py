@@ -666,7 +666,7 @@ class FinalQuizView(APIView, ResponseMixin):
         """
         try:
             quiz_session = QuizSession.objects.get(user=request.user)
-            if quiz_session.attempt_number >= 6:
+            if quiz_session.attempt_number > 5:
                 return self.error_response(
                     None,
                     message="You have reached the maximum number of attempts (5).",
@@ -679,7 +679,7 @@ class FinalQuizView(APIView, ResponseMixin):
         
         return self.success_response(
             serializer.data,
-            message="Final quiz fetched successfully.",
+            message="Final quiz fetched successfully (Max Attempts: 5).",
             status_code=status.HTTP_200_OK
         )
     
@@ -752,7 +752,11 @@ class FinalQuizView(APIView, ResponseMixin):
                         )
                         certificate_data = CertificateSerializer(certificate, context={'request': request}).data
                 except Exception as e:
-                    print(f"Certificate generation failed: {e}")
+                    return self.error_response(
+                        f"{e}",
+                        "Certificate Generation failed",
+                        status_code=status.HTTP_400_BAD_REQUEST
+                    )
             response_data = {
                 "score": f"{score:.1f}%",
                 "passed": passed,
@@ -899,12 +903,14 @@ class CheckUserSessionView(APIView, ResponseMixin):
                 status_code=status.HTTP_404_NOT_FOUND
             )
         if user_profile.is_verified:
+            is_certified = Certificate.objects.select_related('user').filter(user=user, is_valid=True).exists()
             return self.success_response(
                 {
                     "email": user.email,
                     "first_name": user_profile.first_name,
                     "last_name": user_profile.last_name,
                     "is_verified": user_profile.is_verified,
+                    "is_certified": is_certified,
                     "has_session": True
                  },
                 message="Access Token is Valid.",

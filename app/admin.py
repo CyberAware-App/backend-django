@@ -54,4 +54,9 @@ class UserQuizAnswerAdmin(admin.ModelAdmin):
     list_filter = ['session__user__email', 'is_correct']
     search_fields = ['session__user__email', 'question__question']
     
-    
+
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display = ['user__email', 'certificate_id', 'issued_date', 'is_valid']
+    list_filter = ['user__email', 'is_valid']
+    search_fields = ['user__email']
