@@ -676,10 +676,12 @@ class FinalQuizView(APIView, ResponseMixin):
             pass
         final_quiz = FinalQuiz.objects.all().order_by('id')
         serializer = FinalQuizSerializer(final_quiz, many=True)
-        
         return self.success_response(
-            serializer.data,
-            message="Final quiz fetched successfully (Max Attempts: 5).",
+            {
+               "max_attempt": "5",
+               "data": serializer.data 
+            },
+            message="Final quiz fetched successfully.",
             status_code=status.HTTP_200_OK
         )
     
