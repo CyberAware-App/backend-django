@@ -666,7 +666,7 @@ class FinalQuizView(APIView, ResponseMixin):
         """
         try:
             quiz_session = QuizSession.objects.get(user=request.user)
-            if quiz_session.attempt_number > 5:
+            if quiz_session.attempt_number >= 5:
                 return self.error_response(
                     None,
                     message="You have reached the maximum number of attempts (5).",
