@@ -678,7 +678,7 @@ class FinalQuizView(APIView, ResponseMixin):
         serializer = FinalQuizSerializer(final_quiz, many=True)
         return self.success_response(
             {
-               "max_attempts": "5",
+               "max_attempts": 5,
                "exam_data": serializer.data 
             },
             message="Final quiz fetched successfully.",
@@ -710,7 +710,7 @@ class FinalQuizView(APIView, ResponseMixin):
             if not created:
                 quiz_session.attempt_number += 1
                 quiz_session.save(update_fields=['attempt_number'])
-            # Prefetch all final quiz questions to avoid N+1 queries
+                
             final_quiz_questions = {
                 quiz.question: quiz 
                 for quiz in FinalQuiz.objects.all()
