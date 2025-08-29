@@ -1,0 +1,57 @@
+meta {
+  name: Logout
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/logout
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:multipart-form {
+  refresh: {{refreshToken}}
+}
+
+settings {
+  encodeUrl: true
+}
+
+docs {
+  ## Logout
+  
+  ### Endpoint
+  `POST /logout`
+  
+  ### Description
+  Logs a user out by blacklisting the refreshToken.
+  
+  ### Request
+  - **Method:** POST
+  - **Auth:** Bearer token required (`accessToken`)
+  - **Body (multipart-form):**
+    - `refresh`: string (required)
+  
+  ### Success Response
+  ```json
+  {
+    "status": "success",
+    "message": "Logout successful",
+    "data": null
+  }
+  ```
+  
+  ### Error Response
+  ```json
+  {
+    "status": "error",
+    "message": "Logout failed",
+    "errors": "e"
+  }
+  ```
+}

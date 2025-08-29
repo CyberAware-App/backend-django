@@ -904,6 +904,7 @@ class CheckUserSessionView(APIView, ResponseMixin):
                 message="User profile not found.",
                 status_code=status.HTTP_404_NOT_FOUND
             )
+
         if user_profile.is_verified:
             is_certified = Certificate.objects.select_related('user').filter(user=user, is_valid=True).exists()
             return self.success_response(
@@ -925,7 +926,42 @@ class CheckUserSessionView(APIView, ResponseMixin):
                 status_code=status.HTTP_400_BAD_REQUEST
             )
             
+class LogoutView(APIView, ResponseMixin):
+    """
+    Logout View - Logout user
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests for logging out a user.
+
+        Parameters:
+            - self (LogoutView): The instance of the view class.
+            - request (Request): The incoming request object containing the refresh token for logout.
+
+        Returns:
+            - Response: A response object with a success message and HTTP_200_OK status code if logout is successful.
+            - Response: A response object with an error message and HTTP_400_BAD_REQUEST status code if an exception occurs.
+        """
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
             
+            return self.success_response(
+                None,
+                message="Logout successful.",
+                status_code=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return self.error_response(
+                str(e),
+                message="Logout Failed",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+    
+    
 @csrf_exempt
 def mux_webhook(request):
     if request.method == "POST":
@@ -947,6 +983,7 @@ def mux_webhook(request):
                     pass
         elif event_type == "video.asset.errored":
             asset_id = data.get("id")
+            
             try:
                 module = Module.objects.get(mux_asset_id=asset_id)
                 module.mux_status = "errored"

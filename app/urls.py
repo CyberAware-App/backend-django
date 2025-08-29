@@ -23,5 +23,6 @@ urlpatterns = [
     path('session', CheckUserSessionView.as_view(), name='check-user-session'),
     path('schema', SpectacularAPIView.as_view(), name='schema'),
     path('swagger', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path("logout", LogoutView.as_view(), name="logout"),
     path("webhooks/mux", mux_webhook, name="mux-webhook"),
 ]

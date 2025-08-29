@@ -194,8 +194,3 @@ class CertificateSerializer(serializers.ModelSerializer):
                 f'/api/certificate/{obj.certificate_id}/download'
             )
         return None
-
-
-class GenerateCertificateSerializer(serializers.Serializer):
-    """Serializer for generating a new certificate"""
-    pass  # No input fields needed, uses authenticated user

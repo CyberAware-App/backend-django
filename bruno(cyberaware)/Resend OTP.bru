@@ -1,7 +1,7 @@
 meta {
   name: Resend OTP
   type: http
-  seq: 5
+  seq: 7
 }
 
 post {
@@ -16,19 +16,19 @@ body:multipart-form {
 
 docs {
   ## Resend OTP
-
+  
   ### Endpoint
   `POST /resend-otp`
-
+  
   ### Description
   Resends the OTP code to the user’s email.
-
+  
   ### Request
   - **Method:** POST
   - **Auth:** None
   - **Body (multipart-form):**
     - `email`: string (required)
-
+  
   ### Success Response
   ```json
   {

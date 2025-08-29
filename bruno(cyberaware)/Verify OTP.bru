@@ -1,7 +1,7 @@
 meta {
   name: Verify OTP
   type: http
-  seq: 4
+  seq: 6
 }
 
 post {
@@ -17,20 +17,20 @@ body:multipart-form {
 
 docs {
   ## Verify OTP
-
+  
   ### Endpoint
   `POST /verify-otp`
-
+  
   ### Description
   Verifies a one-time password (OTP) sent to the user’s email (typically for registration or password reset).
-
+  
   ### Request
   - **Method:** POST
   - **Auth:** None
   - **Body (multipart-form):**
     - `email`: string (required)
     - `code`: string (required)
-
+  
   ### Success Response
   ```json
   {
