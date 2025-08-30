@@ -204,6 +204,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://cyber-aware.netlify.app',
+    'http://172.16.0.2:3000',
 
 ]
 CORS_ALLOW_CREDENTIALS = True
