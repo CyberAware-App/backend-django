@@ -31,7 +31,7 @@ MUX_TOKEN_ID = os.getenv("MUX_TOKEN_ID")
 MUX_TOKEN_SECRET = os.getenv("MUX_TOKEN_SECRET")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost:5173', 'localhost:3000', 'cyber-aware.netlify.app', '127.0.0.1', '0.0.0.0', 'cyberaware-api-mx7u.onrender.com', 'familiar-lethia-ferditech-4c835a92.koyeb.app']
 
