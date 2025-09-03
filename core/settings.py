@@ -33,7 +33,7 @@ MUX_TOKEN_SECRET = os.getenv("MUX_TOKEN_SECRET")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost:5173', 'localhost:3000', 'cyber-aware.netlify.app', '127.0.0.1', '0.0.0.0', 'cyberaware-api-mx7u.onrender.com', 'familiar-lethia-ferditech-4c835a92.koyeb.app']
+ALLOWED_HOSTS = ['localhost:5173', 'localhost:3000', 'cyber-aware.netlify.app', '127.0.0.1', '0.0.0.0', 'cyberaware-api-mx7u.onrender.com', 'familiar-lethia-ferditech-4c835a92.koyeb.app', 'https://78njjcsc-3000.uks1.devtunnels.ms']
 
 
 # Application definition
@@ -205,7 +205,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://cyber-aware.netlify.app',
     'http://172.16.0.2:3000',
-
+    'https://78njjcsc-3000.uks1.devtunnels.ms',
 ]
 CORS_ALLOW_CREDENTIALS = True
 
