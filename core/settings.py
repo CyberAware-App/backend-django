@@ -214,6 +214,6 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://cyber-aware.netlify.app',
-    'https://familiar-lethia-ferditech-4c835a92.koyeb.app',
+    'https://hon-agnella-cyberaware-ecca99d6.koyeb.app',
     'https://cyberaware-frontend.vercel.app'
 ]
