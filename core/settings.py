@@ -33,7 +33,7 @@ MUX_TOKEN_SECRET = os.getenv("MUX_TOKEN_SECRET")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost:5173', 'localhost:3000', 'cyber-aware.netlify.app', '127.0.0.1', 'familiar-lethia-ferditech-4c835a92.koyeb.app', 'https://78njjcsc-3000.uks1.devtunnels.ms', 'cyberaware-frontend.vercel.app']
+ALLOWED_HOSTS = ['localhost:5173', 'localhost:3000', 'cyber-aware.netlify.app', '127.0.0.1', 'hon-agnella-cyberaware-ecca99d6.koyeb.app', 'https://78njjcsc-3000.uks1.devtunnels.ms', 'cyberaware-frontend.vercel.app']
 
 
 # Application definition
