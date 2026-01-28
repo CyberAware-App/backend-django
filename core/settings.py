@@ -206,7 +206,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://cyber-aware.netlify.app',
     'http://172.16.0.2:3000',
     'https://78njjcsc-3000.uks1.devtunnels.ms',
-    'https://cyberaware-frontend.vercel.app'
+    'https://cyberaware-frontend.vercel.app',
+    'https://cyber-aware-ece.vercel.app'
 ]
 CORS_ALLOW_CREDENTIALS = True
 
